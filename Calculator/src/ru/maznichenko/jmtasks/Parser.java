@@ -1,11 +1,10 @@
 package ru.maznichenko.jmtasks;
 
-public class Parser {
-    public String[] operands;
-    public char op;
-    public boolean arabic;
+import static ru.maznichenko.jmtasks.NumberType.*;
 
-    public void parseInput (String str) {
+public class Parser {
+
+    public InputData parseInput (String str) {
         str = str.replaceAll(" ", ""); // удаляем пробелы
         str = str.toUpperCase(); // преобразуем к верхнему регистру
 
@@ -13,16 +12,51 @@ public class Parser {
         String arabNum = "\\d+"; // регулярное выражение для арабских чисел
         String operation = "[+\\-*/]"; // регулярное выражение для знаков операций +, -, * и /
 
-        if (str.contains("+") || str.contains("-") || str.contains("*") || str.contains("/")) {
-            operands = str.split(operation); // разбиваем выражение на операнды
-            op = str.charAt(operands[0].length()); // определяем знак операции
+        InputData data = new InputData();
 
-            if (operands[0].matches(arabNum) && operands[1].matches(arabNum))
-                arabic = true;
-            else if (operands[0].matches(romanNum) && operands[1].matches(romanNum))
-                arabic = false;
+        if (str.contains("+") || str.contains("-") || str.contains("*") || str.contains("/")) {
+            data.setOperands(str.split(operation)); // разбиваем выражение на операнды
+            data.setOp(str.charAt(data.getOperands()[0].length())); // определяем знак операции
+
+            if (data.getOperands()[0].matches(arabNum) && data.getOperands()[1].matches(arabNum))
+                data.setType(ARABIC);
+            else if (data.getOperands()[0].matches(romanNum) && data.getOperands()[1].matches(romanNum))
+                data.setType(ROMAN);
             else throw new IllegalArgumentException("Ошибка: неверный формат входных данных");
         }
         else throw new IllegalStateException("Ошибка: недопустимый знак операции");
+        return data;
     }
 }
+enum NumberType {ARABIC, ROMAN}
+
+class InputData {
+    private String[] operands;
+    private char op;
+    private NumberType type;
+
+    public String[] getOperands() {
+        return operands;
+    }
+
+    public void setOperands(String[] operands) {
+        this.operands = operands;
+    }
+
+    public char getOp() {
+        return op;
+    }
+
+    public void setOp(char op) {
+        this.op = op;
+    }
+
+    public NumberType getType() {
+        return type;
+    }
+
+    public void setType(NumberType type) {
+        this.type = type;
+    }
+}
+
