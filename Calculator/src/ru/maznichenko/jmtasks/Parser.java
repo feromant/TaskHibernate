@@ -4,7 +4,7 @@ import static ru.maznichenko.jmtasks.NumberType.*;
 
 public class Parser {
 
-    public InputData parseInput (String str) {
+    public static InputData parseInput (String str) {
         str = str.replaceAll(" ", ""); // удаляем пробелы
         str = str.toUpperCase(); // преобразуем к верхнему регистру
 
