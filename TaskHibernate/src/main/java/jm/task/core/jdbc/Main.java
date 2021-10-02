@@ -11,7 +11,7 @@ import org.hibernate.SessionFactory;
 public class Main {
 
     public static void main(String[] args) {
-        Util.getSessionFactory();
+        Util.buildSessionFactory();
         UserService userService = new UserServiceImpl();
         userService.createUsersTable();
         userService.saveUser("Рулон", "Обоев", (byte) 32);

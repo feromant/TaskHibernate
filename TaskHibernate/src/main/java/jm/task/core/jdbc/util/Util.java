@@ -8,10 +8,10 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Environment;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Properties;
 
 public class Util {
     private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
@@ -80,43 +80,50 @@ public class Util {
     }
     /*======================Configuration for Hibernate===============================*/
 
-    private static StandardServiceRegistry registry;
+    private static StandardServiceRegistry serviceRegistry;
     private static SessionFactory sessionFactory;
 
-    public static SessionFactory getSessionFactory() {
-        if (sessionFactory == null) {
-            try {
-                StandardServiceRegistryBuilder registryBuilder =
-                        new StandardServiceRegistryBuilder();
+    private static Properties getProperties() {
+        Properties properties = new Properties();
+        properties.put(Environment.DRIVER, JDBC_DRIVER);
+        properties.put(Environment.URL, URL);
+        properties.put(Environment.USER, USERNAME);
+        properties.put(Environment.PASS, PASSWORD);
+        properties.put(Environment.DIALECT, "org.hibernate.dialect.MySQL8Dialect");
+        properties.put(Environment.SHOW_SQL, "true");
+        properties.put(Environment.HBM2DDL_AUTO, "create-drop");
+        return properties;
+    }
 
-                Map<String, String> settings = new HashMap<>();
-                settings.put("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
-                settings.put("hibernate.connection.url", "jdbc:mysql://localhost:3306/taskjdbc");
-                settings.put("hibernate.connection.username", "root");
-                settings.put("hibernate.connection.password", "1111");
-                settings.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
-                settings.put("hibernate.show_sql", "true");
-                settings.put("hibernate.hbm2ddl.auto", "create-drop");
+    public static void buildSessionFactory() {
 
-                registryBuilder.applySettings(settings);
-                registry = registryBuilder.build();
-                MetadataSources sources = new MetadataSources(registry)
-                        .addAnnotatedClass(User.class);
+        try {
+            serviceRegistry = new StandardServiceRegistryBuilder()
+                    .applySettings(getProperties()).build();
 
-                sessionFactory = sources.buildMetadata().buildSessionFactory();
+            MetadataSources sources = new MetadataSources(serviceRegistry)
+                    .addAnnotatedClass(User.class);
 
-            } catch (Exception e) {
-                System.out.println("SessionFactory creation failed");
-                shutdown();
-            }
+            sessionFactory = sources.buildMetadata().buildSessionFactory();
+            System.out.println("SessionFactory built successfully");
+        } catch (Exception e) {
+            System.out.println("SessionFactory's creation failed");
+            shutdown();
         }
-        return sessionFactory;
+
     }
 
     public static void shutdown() {
-        if (registry != null) {
-            StandardServiceRegistryBuilder.destroy(registry);
+        if (serviceRegistry != null) {
+            StandardServiceRegistryBuilder.destroy(serviceRegistry);
         }
+    }
+
+    public static Session getSession() {
+        if (sessionFactory == null) {
+            buildSessionFactory();
+        }
+        return sessionFactory.openSession();
     }
 
     public static void closeSession(Session session) {
@@ -132,7 +139,7 @@ public class Util {
         if (tx != null) {
             try {
                 tx.rollback();
-                System.out.println("JTA Transaction rolled back successfully");
+                System.out.println("Transaction rolled back successfully");
             } catch (HibernateException he) {
                 System.out.println("HibernateException in rollback" + he.getMessage());
             }
